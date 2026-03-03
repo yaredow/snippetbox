@@ -1,7 +1,34 @@
 package main
 
-import "fmt"
+import (
+	"log"
+	"net/http"
+)
+
+func home(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+	}
+
+	w.Write([]byte("Hello from snippetbox"))
+}
+
+func showSnippet(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Display a specific snippet"))
+}
+
+func createSnippet(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Create a new snippet"))
+}
 
 func main() {
-	fmt.Println("Hello, World!")
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", home)
+	mux.HandleFunc("/snippets", showSnippet)
+	mux.HandleFunc("/snippets/create", createSnippet)
+
+	log.Println("Starting server on :4000")
+	err := http.ListenAndServe(":4000", mux)
+
+	log.Fatal(err)
 }
