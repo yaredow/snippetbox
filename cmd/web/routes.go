@@ -1,16 +1,23 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/justinas/alice"
+)
 
 func (app *application) routes() http.Handler {
-	mux := http.NewServeMux()
+	r := chi.NewRouter()
 
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/snippet", app.showSnippet)
-	mux.HandleFunc("/snippet/create", app.createSnippet)
+	standardMiddleware := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
+
+	r.Get("/", app.home)
+	r.Get("/snippet", app.showSnippet)
+	r.Post("/snippet/create", app.createSnippet)
 
 	fileServer := http.FileServer(http.Dir("./ui/static"))
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
+	r.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	return app.recoverPanic(app.logRequest(secureHeaders(mux)))
+	return standardMiddleware.Then(r)
 }
