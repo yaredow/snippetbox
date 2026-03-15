@@ -13,8 +13,9 @@ func (app *application) routes() http.Handler {
 	standardMiddleware := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 
 	r.Get("/", app.home)
-	r.Get("/snippet", app.showSnippet)
 	r.Post("/snippet/create", app.createSnippet)
+	r.Get("/snippet/create", app.createSnippetForm)
+	r.Get("/snippet/{id}", app.showSnippet)
 
 	fileServer := http.FileServer(http.Dir("./ui/static"))
 	r.Handle("/static/", http.StripPrefix("/static", fileServer))
