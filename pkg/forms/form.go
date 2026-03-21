@@ -19,6 +19,16 @@ func New(data url.Values) *Form {
 	}
 }
 
+func (f *Form) Required(fields ...string) {
+	for _, field := range fields {
+		value := f.Get(field)
+
+		if value == "" {
+			f.Errors.Add(field, "This field cannot be blank")
+		}
+	}
+}
+
 func (f *Form) MaxLength(field string, d int) {
 	value := f.Get(field)
 
@@ -38,11 +48,11 @@ func (f *Form) PermittedValues(field string, opts ...string) {
 		return
 	}
 
-	if slices.Contains(opts, value) {
+	if !slices.Contains(opts, value) {
 		f.Errors.Add(field, "This field is invalid")
 	}
 }
 
-func (f *Form) valid() bool {
+func (f *Form) Valid() bool {
 	return len(f.Errors) == 0
 }

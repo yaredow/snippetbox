@@ -7,15 +7,20 @@ import (
 	"github.com/justinas/alice"
 )
 
+func adaptHandler(h http.Handler) http.HandlerFunc {
+	return h.ServeHTTP
+}
+
 func (app *application) routes() http.Handler {
 	r := chi.NewRouter()
 
 	standardMiddleware := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
+	dynamicMiddleware := alice.New(app.session.Enable)
 
-	r.Get("/", app.home)
-	r.Post("/snippet/create", app.createSnippet)
-	r.Get("/snippet/create", app.createSnippetForm)
-	r.Get("/snippet/{id}", app.showSnippet)
+	r.Get("/", adaptHandler(dynamicMiddleware.ThenFunc(app.home)))
+	r.Post("/snippet/create", adaptHandler(dynamicMiddleware.ThenFunc(app.createSnippetForm)))
+	r.Get("/snippet/create", adaptHandler(dynamicMiddleware.ThenFunc(app.createSnippet)))
+	r.Get("/snippet/{id}", adaptHandler(dynamicMiddleware.ThenFunc(app.showSnippet)))
 
 	fileServer := http.FileServer(http.Dir("./ui/static"))
 	r.Handle("/static/", http.StripPrefix("/static", fileServer))
